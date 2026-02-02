@@ -44,8 +44,8 @@ Example `~/.openclaw/openclaw.json`:
 Restart the gateway after config changes.
 
 ## Environment Variables
-The plugin tries env files in order (**openclaw → moltbot → clawdbot**), and uses the first match.
-If none of these files exist, it falls back to the process environment.
+The plugin tries env files in order (**openclaw → moltbot → clawdbot**). For each key, the first file with a value wins.
+If none of these files exist (or the key is missing), it falls back to the process environment.
 
 **Where to configure**
 - Files (priority order):
@@ -58,7 +58,10 @@ If none of these files exist, it falls back to the process environment.
 ```bash
 echo 'export MEMOS_API_KEY="mpg-..."' >> ~/.zshrc
 source ~/.zshrc
-# or ~/.bashrc
+# or
+
+echo 'export MEMOS_API_KEY="mpg-..."' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 **Quick setup (Windows PowerShell)**

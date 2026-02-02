@@ -46,8 +46,8 @@ openclaw gateway restart
 修改配置后需要重启 gateway。
 
 ## 环境变量
-插件按顺序读取 env 文件（**openclaw → moltbot → clawdbot**），优先使用最先匹配到的配置。
-若三个文件都不存在，才会回退到进程环境变量。
+插件按顺序读取 env 文件（**openclaw → moltbot → clawdbot**），每个键优先使用最先匹配到的值。
+若三个文件都不存在（或该键未找到），才会回退到进程环境变量。
 
 **配置位置**
 - 文件（优先级顺序）：
@@ -60,7 +60,10 @@ openclaw gateway restart
 ```bash
 echo 'export MEMOS_API_KEY="mpg-..."' >> ~/.zshrc
 source ~/.zshrc
-# 或 ~/.bashrc
+# 或者
+
+echo 'export MEMOS_API_KEY="mpg-..."' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 **快速配置（Windows PowerShell）**

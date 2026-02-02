@@ -9,18 +9,22 @@ import {
 let lastCaptureTime = 0;
 const conversationCounters = new Map();
 const API_KEY_HELP_URL = "https://memos-dashboard.openmem.net/cn/apikeys/";
-const ENV_FILE_HINTS = "~/.openclaw/.env, ~/.moltbot/.env, ~/.clawdbot/.env";
+const ENV_FILE_SEARCH_HINTS = ["~/.openclaw/.env", "~/.moltbot/.env", "~/.clawdbot/.env"];
 
-function warnMissingApiKey(log) {
+function warnMissingApiKey(log, context) {
+  const heading = "[memos-cloud] Missing MEMOS_API_KEY (Token auth)";
+  const header = `${heading}${context ? `; ${context} skipped` : ""}. Configure it with:`;
   log.warn?.(
     [
-      "[memos-cloud] Missing MEMOS_API_KEY.",
-      "Configure it with one of:",
-      "  echo 'export MEMOS_API_KEY=\"mpg-...\"' >> ~/.zshrc",
-      "  source ~/.zshrc",
-      "  (or ~/.bashrc)",
-      "  [System.Environment]::SetEnvironmentVariable(\"MEMOS_API_KEY\", \"mpg-...\", \"User\")",
-      `Get an API key at: ${API_KEY_HELP_URL}`,
+      header,
+      "echo 'export MEMOS_API_KEY=\"mpg-...\"' >> ~/.zshrc",
+      "source ~/.zshrc",
+      "or",
+      "echo 'export MEMOS_API_KEY=\"mpg-...\"' >> ~/.bashrc",
+      "source ~/.bashrc",
+      "or",
+      "[System.Environment]::SetEnvironmentVariable(\"MEMOS_API_KEY\", \"mpg-...\", \"User\")",
+      `Get API key: ${API_KEY_HELP_URL}`,
     ].join("\n"),
   );
 }
@@ -160,12 +164,9 @@ export default {
     const cfg = buildConfig(api.pluginConfig);
     const log = api.logger ?? console;
 
-    if (cfg.envFileMissing && cfg.apiKey) {
-      log.warn?.(`[memos-cloud] No env file found at ${ENV_FILE_HINTS}; using process.env or plugin config.`);
-    }
-
-    if (!cfg.apiKey) {
-      warnMissingApiKey(log);
+    if (!cfg.envFileStatus?.found) {
+      const searchPaths = cfg.envFileStatus?.searchPaths?.join(", ") ?? ENV_FILE_SEARCH_HINTS.join(", ");
+      log.warn?.(`[memos-cloud] No .env found in ${searchPaths}; falling back to process env or plugin config.`);
     }
 
     if (cfg.conversationSuffixMode === "counter" && cfg.resetOnNew) {
@@ -189,8 +190,8 @@ export default {
     api.on("before_agent_start", async (event, ctx) => {
       if (!cfg.recallEnabled) return;
       if (!event?.prompt || event.prompt.length < 3) return;
-      if (!cfg.apiKey || !cfg.userId) {
-        log.warn?.("[memos-cloud] Missing apiKey or userId; recall skipped.");
+      if (!cfg.apiKey) {
+        warnMissingApiKey(log, "recall");
         return;
       }
 
@@ -211,8 +212,8 @@ export default {
     api.on("agent_end", async (event, ctx) => {
       if (!cfg.addEnabled) return;
       if (!event?.success || !event?.messages?.length) return;
-      if (!cfg.apiKey || !cfg.userId) {
-        log.warn?.("[memos-cloud] Missing apiKey or userId; add skipped.");
+      if (!cfg.apiKey) {
+        warnMissingApiKey(log, "add");
         return;
       }
 
