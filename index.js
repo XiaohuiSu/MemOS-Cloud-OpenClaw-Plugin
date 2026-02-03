@@ -198,7 +198,7 @@ export default {
       try {
         const payload = buildSearchPayload(cfg, event.prompt, ctx);
         const result = await searchMemory(cfg, payload);
-        const promptBlock = formatPromptBlock(result, { maxItemChars: 200 });
+        const promptBlock = formatPromptBlock(result, { maxItemChars: 200, wrapTagBlocks: true });
         if (!promptBlock) return;
 
         return {
