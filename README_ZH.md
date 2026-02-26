@@ -13,11 +13,15 @@
 
 ## 安装
 
-### 方式 A — GitHub
+### 方式 A — NPM（推荐）
 ```bash
 openclaw plugins install @memtensor/memos-cloud-openclaw-plugin
 openclaw gateway restart
 ```
+
+> **Windows 用户注意**：
+> 如果遇到 `Error: spawn EINVAL` 报错，这是 OpenClaw Windows 安装器的已知问题。请使用下方的 **方式 B**（手动安装）。
+
 确认 `~/.openclaw/openclaw.json` 中已启用：
 ```json
 {
@@ -29,20 +33,27 @@ openclaw gateway restart
 }
 ```
 
-### 方式 B — 本地路径
-把本目录放到 OpenClaw 插件路径（如 `~/.openclaw/extensions/`），或用 `plugins.load.paths` 指向它。
+### 方式 B — 手动安装（Windows 解决方案）
+1. 从 [NPM](https://www.npmjs.com/package/@memtensor/memos-cloud-openclaw-plugin) 下载最新的 `.tgz` 包。
+2. 解压到本地目录（例如 `C:\Users\YourName\.openclaw\extensions\memos-cloud-openclaw-plugin`）。
+3. 修改配置 `~/.openclaw/openclaw.json`（或 `%USERPROFILE%\.openclaw\openclaw.json`）：
 
-示例 `~/.openclaw/openclaw.json`：
 ```json
 {
   "plugins": {
     "entries": {
       "memos-cloud-openclaw-plugin": { "enabled": true }
     },
-    "load": { "paths": ["/path/to/memos-cloud-openclaw-plugin"] }
+    "load": {
+      "paths": [
+        "C:\\Users\\YourName\\.openclaw\\extensions\\memos-cloud-openclaw-plugin\\package"
+      ]
+    }
   }
 }
 ```
+*注意：解压后的文件夹通常包含一个 `package` 子文件夹，请指向包含 `package.json` 的那层目录。*
+
 修改配置后需要重启 gateway。
 
 ## 环境变量

@@ -11,11 +11,15 @@ A minimal OpenClaw lifecycle plugin that **recalls** memories from MemOS Cloud b
 
 ## Install
 
-### Option A — GitHub
+### Option A — NPM (Recommended)
 ```bash
 openclaw plugins install @memtensor/memos-cloud-openclaw-plugin
 openclaw gateway restart
 ```
+
+> **Note for Windows Users**:
+> If you encounter `Error: spawn EINVAL`, this is a known issue with OpenClaw's plugin installer on Windows. Please use **Option B** (Manual Install) below.
+
 Make sure it’s enabled in `~/.openclaw/openclaw.json`:
 ```json
 {
@@ -27,20 +31,27 @@ Make sure it’s enabled in `~/.openclaw/openclaw.json`:
 }
 ```
 
-### Option B — Local path
-Copy this folder into an OpenClaw plugin path (e.g. `~/.openclaw/extensions/`) or use `plugins.load.paths` to point at it.
+### Option B — Manual Install (Workaround for Windows)
+1. Download the latest `.tgz` from [NPM](https://www.npmjs.com/package/@memtensor/memos-cloud-openclaw-plugin).
+2. Extract it to a local folder (e.g., `C:\Users\YourName\.openclaw\extensions\memos-cloud-openclaw-plugin`).
+3. Configure `~/.openclaw/openclaw.json` (or `%USERPROFILE%\.openclaw\openclaw.json`):
 
-Example `~/.openclaw/openclaw.json`:
 ```json
 {
   "plugins": {
     "entries": {
       "memos-cloud-openclaw-plugin": { "enabled": true }
     },
-    "load": { "paths": ["/path/to/memos-cloud-openclaw-plugin"] }
+    "load": {
+      "paths": [
+        "C:\\Users\\YourName\\.openclaw\\extensions\\memos-cloud-openclaw-plugin\\package"
+      ]
+    }
   }
 }
 ```
+*Note: The extracted folder usually contains a `package` subfolder. Point to the folder containing `package.json`.*
+
 Restart the gateway after config changes.
 
 ## Environment Variables
