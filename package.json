@@ -1,6 +1,6 @@
 {
   "name": "@memtensor/memos-cloud-openclaw-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OpenClaw lifecycle plugin for MemOS Cloud (add + recall memory)",
   "keywords": [
     "memos",
