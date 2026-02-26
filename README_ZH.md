@@ -15,7 +15,7 @@
 
 ### 方式 A — GitHub
 ```bash
-openclaw plugins install github:MemTensor/MemOS-Cloud-OpenClaw-Plugin
+openclaw plugins install @memtensor/memos-cloud-openclaw-plugin
 openclaw gateway restart
 ```
 确认 `~/.openclaw/openclaw.json` 中已启用：

@@ -13,7 +13,7 @@ A minimal OpenClaw lifecycle plugin that **recalls** memories from MemOS Cloud b
 
 ### Option A — GitHub
 ```bash
-openclaw plugins install github:MemTensor/MemOS-Cloud-OpenClaw-Plugin
+openclaw plugins install @memtensor/memos-cloud-openclaw-plugin
 openclaw gateway restart
 ```
 Make sure it’s enabled in `~/.openclaw/openclaw.json`:
