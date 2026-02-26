@@ -104,6 +104,7 @@ In `plugins.entries.memos-cloud-openclaw-plugin.config`:
   "conversationIdSuffix": "",
   "conversationSuffixMode": "none",
   "resetOnNew": true,
+  "knowledgebaseIds": [],
   "memoryLimitNumber": 6,
   "preferenceLimitNumber": 6,
   "includePreference": true,
