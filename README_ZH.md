@@ -108,6 +108,7 @@ MEMOS_API_KEY=YOUR_TOKEN
   "resetOnNew": true,
   "memoryLimitNumber": 6,
   "preferenceLimitNumber": 6,
+  "knowledgebaseIds": [],
   "includePreference": true,
   "includeToolMemory": false,
   "toolMemoryLimitNumber": 6,
