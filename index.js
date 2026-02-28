@@ -7,7 +7,6 @@ import {
   USER_QUERY_MARKER,
   searchMemory,
 } from "./lib/memos-cloud-api.js";
-
 let lastCaptureTime = 0;
 const conversationCounters = new Map();
 const API_KEY_HELP_URL = "https://memos-dashboard.openmem.net/cn/apikeys/";
@@ -88,6 +87,7 @@ function buildSearchPayload(cfg, prompt, ctx) {
   payload.preference_limit_number = cfg.preferenceLimitNumber;
   payload.include_tool_memory = cfg.includeToolMemory;
   payload.tool_memory_limit_number = cfg.toolMemoryLimitNumber;
+  payload.relativity = cfg.relativity ?? 0.7;
 
   return payload;
 }
@@ -213,7 +213,10 @@ export default {
       try {
         const payload = buildSearchPayload(cfg, event.prompt, ctx);
         const result = await searchMemory(cfg, payload);
-        const promptBlock = formatPromptBlock(result, { wrapTagBlocks: true });
+        const promptBlock = formatPromptBlock(result, { 
+          wrapTagBlocks: true,
+          relativity: payload.relativity 
+        });
         if (!promptBlock) return;
 
         return {
