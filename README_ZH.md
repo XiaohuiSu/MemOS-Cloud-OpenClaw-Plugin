@@ -15,7 +15,7 @@
 
 ### 方式 A — NPM（推荐）
 ```bash
-openclaw plugins install @memtensor/memos-cloud-openclaw-plugin
+openclaw plugins install @memtensor/memos-cloud-openclaw-plugin@latest
 openclaw gateway restart
 ```
 
