@@ -51,7 +51,9 @@ function bumpConversationCounter(sessionKey) {
 }
 
 function getEffectiveAgentId(cfg, ctx) {
-  if (!cfg.multiAgentMode) return undefined;
+  if (!cfg.multiAgentMode) {
+    return cfg.agentId;
+  }
   const agentId = ctx?.agentId || cfg.agentId;
   return agentId === "main" ? undefined : agentId;
 }
