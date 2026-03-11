@@ -7,7 +7,7 @@ import {
   USER_QUERY_MARKER,
   searchMemory,
 } from "./lib/memos-cloud-api.js";
-import { checkUpdate } from "./lib/check-update.js";
+import { startUpdateChecker } from "./lib/check-update.js";
 let lastCaptureTime = 0;
 const conversationCounters = new Map();
 const API_KEY_HELP_URL = "https://memos-dashboard.openmem.net/cn/apikeys/";
@@ -206,8 +206,8 @@ export default {
     const cfg = buildConfig(api.pluginConfig);
     const log = api.logger ?? console;
 
-    // Call update check asynchronously. The interval control is inside checkUpdate
-    checkUpdate(log);
+    // Start 12-hour background update interval
+    startUpdateChecker(log);
 
     if (!cfg.envFileStatus?.found) {
       const searchPaths = cfg.envFileStatus?.searchPaths?.join(", ") ?? ENV_FILE_SEARCH_HINTS.join(", ");
@@ -233,7 +233,6 @@ export default {
     }
 
     api.on("before_agent_start", async (event, ctx) => {
-      checkUpdate(log);
       if (!cfg.recallEnabled) return;
       if (!event?.prompt || event.prompt.length < 3) return;
       if (!cfg.apiKey) {
