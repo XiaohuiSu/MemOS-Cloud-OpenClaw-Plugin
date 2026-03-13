@@ -3,7 +3,7 @@ import {
   addMessage,
   buildConfig,
   extractText,
-  formatPromptBlock,
+  formatRecallHookResult,
   USER_QUERY_MARKER,
   searchMemory,
 } from "./lib/memos-cloud-api.js";
@@ -239,15 +239,13 @@ export default {
       try {
         const payload = buildSearchPayload(cfg, event.prompt, ctx);
         const result = await searchMemory(cfg, payload);
-        const promptBlock = formatPromptBlock(result, { 
+        const hookResult = formatRecallHookResult(result, {
           wrapTagBlocks: true,
-          relativity: payload.relativity 
+          relativity: payload.relativity,
         });
-        if (!promptBlock) return;
+        if (!hookResult.appendSystemContext && !hookResult.prependContext) return;
 
-        return {
-          prependContext: promptBlock,
-        };
+        return hookResult;
       } catch (err) {
         log.warn?.(`[memos-cloud] recall failed: ${String(err)}`);
       }
