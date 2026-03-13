@@ -97,6 +97,15 @@ MEMOS_API_KEY=YOUR_TOKEN
 - `MEMOS_CONVERSATION_PREFIX` / `MEMOS_CONVERSATION_SUFFIX` (optional)
 - `MEMOS_CONVERSATION_SUFFIX_MODE` (`none` | `counter`, default: `none`)
 - `MEMOS_CONVERSATION_RESET_ON_NEW` (default: `true`, requires hooks.internal.enabled)
+- `MEMOS_RECALL_FILTER_ENABLED` (default: `false`; run model-based memory filtering before injection)
+- `MEMOS_RECALL_FILTER_BASE_URL` (OpenAI-compatible base URL, e.g. `http://127.0.0.1:11434/v1`)
+- `MEMOS_RECALL_FILTER_API_KEY` (optional; required if your endpoint needs auth)
+- `MEMOS_RECALL_FILTER_MODEL` (model name used to filter recall candidates)
+- `MEMOS_RECALL_FILTER_TIMEOUT_MS` (default: `6000`)
+- `MEMOS_RECALL_FILTER_RETRIES` (default: `0`)
+- `MEMOS_RECALL_FILTER_CANDIDATE_LIMIT` (default: `30` per category)
+- `MEMOS_RECALL_FILTER_MAX_ITEM_CHARS` (default: `500`)
+- `MEMOS_RECALL_FILTER_FAIL_OPEN` (default: `true`; fallback to unfiltered recall on failure)
 
 ## Optional Plugin Config
 In `plugins.entries.memos-cloud-openclaw-plugin.config`:
@@ -111,6 +120,7 @@ In `plugins.entries.memos-cloud-openclaw-plugin.config`:
   "recallGlobal": true,
   "addEnabled": true,
   "captureStrategy": "last_turn",
+  "maxItemChars": 8000,
   "includeAssistant": true,
   "conversationIdPrefix": "",
   "conversationIdSuffix": "",
@@ -126,7 +136,16 @@ In `plugins.entries.memos-cloud-openclaw-plugin.config`:
   "tags": ["openclaw"],
   "agentId": "",
   "multiAgentMode": false,
-  "asyncMode": true
+  "asyncMode": true,
+  "recallFilterEnabled": false,
+  "recallFilterBaseUrl": "http://127.0.0.1:11434/v1",
+  "recallFilterApiKey": "",
+  "recallFilterModel": "qwen2.5:7b",
+  "recallFilterTimeoutMs": 6000,
+  "recallFilterRetries": 0,
+  "recallFilterCandidateLimit": 30,
+  "recallFilterMaxItemChars": 500,
+  "recallFilterFailOpen": true
 }
 ```
 
@@ -134,6 +153,7 @@ In `plugins.entries.memos-cloud-openclaw-plugin.config`:
 - **Recall** (`before_agent_start`)
   - Builds a `/search/memory` request using `user_id`, `query` (= prompt + optional prefix), and optional filters.
   - Default **global recall**: when `recallGlobal=true`, it does **not** pass `conversation_id`.
+  - Optional second-pass filtering: if `recallFilterEnabled=true`, candidates are sent to your configured model and only returned `keep` items are injected.
   - Injects a stable MemOS recall protocol via `appendSystemContext`, while the retrieved `<memories>` block remains in `prependContext`.
 
 - **Add** (`agent_end`)

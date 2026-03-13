@@ -2,7 +2,7 @@
   "id": "memos-cloud-openclaw-plugin",
   "name": "MemOS Cloud OpenClaw Plugin",
   "description": "MemOS Cloud recall + add memory via lifecycle hooks",
-  "version": "0.1.8",
+  "version": "0.1.8-beta.8",
   "kind": "lifecycle",
   "main": "./index.js",
   "configSchema": {
@@ -77,6 +77,11 @@
         "type": "integer",
         "description": "Max chars per message when adding",
         "default": 20000
+      },
+      "maxItemChars": {
+        "type": "integer",
+        "description": "Max chars per memory item when injecting prompt",
+        "default": 8000
       },
       "includeAssistant": {
         "type": "boolean",
