@@ -135,9 +135,18 @@ ou_real: actual message`;
   );
 });
 
-test("ignores text that looks like Feishu prompt but missing header", () => {
+test("strips Feishu prompt without system header", () => {
   const input = `
 [message_id: om_x100b54bb510590dcc2998da17ca2c2b] 
 ou_37e8a1514c24e8afd9cfeca86f679980: 我叫什么名字 `;
-  assert.equal(stripOpenClawInjectedPrefix(input), input.trimStart());
+  assert.equal(stripOpenClawInjectedPrefix(input), "我叫什么名字");
+});
+
+test("keeps content when [message_id] block is not leading and no Feishu header", () => {
+  const input = [
+    "hello",
+    "[message_id: om_x100b54bb510590dcc2998da17ca2c2b]",
+    "ou_37e8a1514c24e8afd9cfeca86f679980: 我叫什么名字",
+  ].join("\n");
+  assert.equal(stripOpenClawInjectedPrefix(input), input);
 });
