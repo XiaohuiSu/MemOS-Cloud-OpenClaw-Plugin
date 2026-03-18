@@ -150,3 +150,52 @@ test("keeps content when [message_id] block is not leading and no Feishu header"
   ].join("\n");
   assert.equal(stripOpenClawInjectedPrefix(input), input);
 });
+
+// --- Feishu group chat trailing [System: ...] mention hints ---
+
+test("strips trailing Feishu [System: ...] mention hints from group chat", () => {
+  const input =
+    '你能干什么 [System: The content may include mention tags in the form name. Treat these as real mentions of Feishu entities (users or bots).] [System: If user_id is "ou_37b5b8f35d1a57ce3d57080965534b19", that mention refers to you.]';
+  assert.equal(stripOpenClawInjectedPrefix(input), "你能干什么");
+});
+
+test("strips single trailing [System: ...] hint", () => {
+  const input = "hello [System: some meta info.]";
+  assert.equal(stripOpenClawInjectedPrefix(input), "hello");
+});
+
+test("keeps [System: ...] when it appears at the start (not trailing)", () => {
+  const input = "[System: meta] hello world";
+  assert.equal(stripOpenClawInjectedPrefix(input), input);
+});
+
+test("keeps text unchanged when [System: ...] appears in middle", () => {
+  const input = "before [System: meta] after";
+  assert.equal(stripOpenClawInjectedPrefix(input), input);
+});
+
+test("keeps original when entire text is [System: ...] blocks", () => {
+  const input = "[System: only system hints here.]";
+  assert.equal(stripOpenClawInjectedPrefix(input), input);
+});
+
+test("strips trailing [System: ...] combined with Feishu DM header", () => {
+  const input = [
+    "System: [2026-03-17 14:17:33 GMT+8] Feishu[default] DM from ou_123: 你好",
+    "[message_id: om_abc]",
+    "ou_123: 你好 [System: mention info.]",
+  ].join("\n");
+  assert.equal(stripOpenClawInjectedPrefix(input), "你好");
+});
+
+test("strips trailing [System: ...] combined with inbound metadata prefix", () => {
+  const input = [
+    "Conversation info (untrusted metadata):",
+    "```json",
+    '{"message_id":"123"}',
+    "```",
+    "",
+    '帮我看下这个问题 [System: If user_id is "ou_xxx", that mention refers to you.]',
+  ].join("\n");
+  assert.equal(stripOpenClawInjectedPrefix(input), "帮我看下这个问题");
+});
