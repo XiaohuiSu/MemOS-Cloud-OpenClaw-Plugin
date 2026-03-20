@@ -94,6 +94,7 @@ MEMOS_API_KEY=YOUR_TOKEN
 - `MEMOS_CONVERSATION_ID` (optional override)
 - `MEMOS_RECALL_GLOBAL` (default: `true`; when true, search does **not** pass conversation_id)
 - `MEMOS_MULTI_AGENT_MODE` (default: `false`; enable multi-agent data isolation)
+- `MEMOS_ALLOWED_AGENTS` (optional; comma-separated allowlist for multi-agent mode, e.g. `"agent1,agent2"`; empty means all agents enabled)
 - `MEMOS_CONVERSATION_PREFIX` / `MEMOS_CONVERSATION_SUFFIX` (optional)
 - `MEMOS_CONVERSATION_SUFFIX_MODE` (`none` | `counter`, default: `none`)
 - `MEMOS_CONVERSATION_RESET_ON_NEW` (default: `true`, requires hooks.internal.enabled)
@@ -136,6 +137,7 @@ In `plugins.entries.memos-cloud-openclaw-plugin.config`:
   "tags": ["openclaw"],
   "agentId": "",
   "multiAgentMode": false,
+  "allowedAgents": [],
   "asyncMode": true,
   "recallFilterEnabled": false,
   "recallFilterBaseUrl": "http://127.0.0.1:11434/v1",
@@ -166,6 +168,45 @@ The plugin provides native support for multi-agent architectures (via the `agent
 - **Dynamic Context**: When enabled, it automatically captures `ctx.agentId` during OpenClaw lifecycle hooks. (Note: the default OpenClaw agent `"main"` is ignored to preserve backwards compatibility for single-agent users).
 - **Data Isolation**: The `agent_id` is automatically injected into both `/search/memory` and `/add/message` requests. This ensures completely isolated memory and message histories for different agents, even under the same user or session.
 - **Static Override**: You can also force a specific agent ID by setting `"agentId": "your_agent_id"` in the plugin's `config`.
+
+### Per-Agent Memory Toggle
+
+In multi-agent mode, you can use `MEMOS_ALLOWED_AGENTS` to control exactly which agents have memory enabled. Agents not in the allowlist will skip both memory recall and memory capture entirely.
+
+**Environment variable** (in `~/.openclaw/.env`):
+```env
+MEMOS_MULTI_AGENT_MODE=true
+MEMOS_ALLOWED_AGENTS="agent1,agent2"
+```
+
+Separate multiple agent IDs with commas.
+
+**Plugin config** (in `openclaw.json`):
+```json
+{
+  "plugins": {
+    "entries": {
+      "memos-cloud-openclaw-plugin": {
+        "enabled": true,
+        "config": {
+          "multiAgentMode": true,
+          "allowedAgents": ["agent1", "agent2"]
+        }
+      }
+    }
+  }
+}
+```
+
+**Behavior**:
+| Config | Effect |
+|--------|--------|
+| `MEMOS_ALLOWED_AGENTS` unset or empty | All agents have memory enabled |
+| `MEMOS_ALLOWED_AGENTS="agent1,agent2"` | Only `agent1` and `agent2` are enabled; others are skipped |
+| `MEMOS_ALLOWED_AGENTS="agent1"` | Only `agent1` is enabled; all other agents are skipped |
+| `MEMOS_MULTI_AGENT_MODE=false` | Allowlist has no effect; all requests use single-agent mode |
+
+> **Note**: The allowlist only takes effect when `multiAgentMode=true`. When multi-agent mode is off, memory works for all agents and the allowlist is ignored.
 
 ## Notes
 - `conversation_id` defaults to OpenClaw `sessionKey` (unless `conversationId` is provided). **TODO**: consider binding to OpenClaw `sessionId` directly.

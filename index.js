@@ -5,6 +5,7 @@ import {
   extractResultData,
   extractText,
   formatRecallHookResult,
+  isAgentAllowed,
   USER_QUERY_MARKER,
   searchMemory,
 } from "./lib/memos-cloud-api.js";
@@ -406,6 +407,10 @@ export default {
       log.warn?.(`[memos-cloud] No .env found in ${searchPaths}; falling back to process env or plugin config.`);
     }
 
+    if (cfg.multiAgentMode && cfg.allowedAgents?.length > 0) {
+      log.info?.(`[memos-cloud] Multi-agent mode enabled. Allowed agents: [${cfg.allowedAgents.join(", ")}]`);
+    }
+
     if (cfg.conversationSuffixMode === "counter" && cfg.resetOnNew) {
       if (api.config?.hooks?.internal?.enabled !== true) {
         log.warn?.("[memos-cloud] command:new hook requires hooks.internal.enabled = true");
@@ -426,6 +431,10 @@ export default {
 
     api.on("before_agent_start", async (event, ctx) => {
       if (!cfg.recallEnabled) return;
+      if (!isAgentAllowed(cfg, ctx)) {
+        log.info?.(`[memos-cloud] recall skipped: agent "${ctx?.agentId}" not in allowedAgents [${cfg.allowedAgents?.join(", ")}]`);
+        return;
+      }
       if (!event?.prompt || event.prompt.length < 3) return;
       if (!cfg.apiKey) {
         warnMissingApiKey(log, "recall");
@@ -453,6 +462,10 @@ export default {
 
     api.on("agent_end", async (event, ctx) => {
       if (!cfg.addEnabled) return;
+      if (!isAgentAllowed(cfg, ctx)) {
+        log.info?.(`[memos-cloud] add skipped: agent "${ctx?.agentId}" not in allowedAgents [${cfg.allowedAgents?.join(", ")}]`);
+        return;
+      }
       if (!event?.success || !event?.messages?.length) return;
       if (!cfg.apiKey) {
         warnMissingApiKey(log, "add");

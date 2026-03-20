@@ -96,6 +96,7 @@ MEMOS_API_KEY=YOUR_TOKEN
 - `MEMOS_CONVERSATION_ID`（可选覆盖）
 - `MEMOS_RECALL_GLOBAL`（默认 `true`；为 true 时检索不传 conversation_id）
 - `MEMOS_MULTI_AGENT_MODE`（默认 `false`；是否开启多 Agent 数据隔离模式）
+- `MEMOS_ALLOWED_AGENTS`（可选；多 Agent 模式下的白名单，逗号分隔，例如 `"agent1,agent2"`；为空则所有 Agent 均启用）
 - `MEMOS_CONVERSATION_PREFIX` / `MEMOS_CONVERSATION_SUFFIX`（可选）
 - `MEMOS_CONVERSATION_SUFFIX_MODE`（`none` | `counter`，默认 `none`）
 - `MEMOS_CONVERSATION_RESET_ON_NEW`（默认 `true`，需 hooks.internal.enabled）
@@ -136,6 +137,7 @@ MEMOS_API_KEY=YOUR_TOKEN
   "tags": ["openclaw"],
   "agentId": "",
   "multiAgentMode": false,
+  "allowedAgents": [],
   "asyncMode": true,
   "recallFilterEnabled": false,
   "recallFilterBaseUrl": "http://127.0.0.1:11434/v1",
@@ -171,6 +173,45 @@ MEMOS_API_KEY=YOUR_TOKEN
 - **动态获取**：开启后，执行生命周期钩子时会自动读取上下文中的 `ctx.agentId`。（注：OpenClaw 的默认 Agent `"main"` 会被自动忽略，以保证老用户的单 Agent 数据兼容性）。
 - **数据隔离**：在调用 `/search/memory`（检索记忆）和 `/add/message`（添加记录）时会自动附带该 `agent_id`，从而保证即使是同一用户下的不同 Agent 之间，记忆和反馈数据也是完全隔离的。
 - **静态配置**：如果需要，也可在上述插件的 `config` 中显式指定 `"agentId": "your_agent_id"` 作为固定值。
+
+### 按 Agent 开关记忆插件
+
+在多 Agent 模式下，可以通过 `MEMOS_ALLOWED_AGENTS` 精确控制哪些 Agent 启用记忆功能。未在白名单中的 Agent 将完全跳过记忆召回和记忆添加。
+
+**环境变量配置**（在 `~/.openclaw/.env` 中设置）：
+```env
+MEMOS_MULTI_AGENT_MODE=true
+MEMOS_ALLOWED_AGENTS="agent1,agent2"
+```
+
+多个 Agent ID 之间用英文逗号分隔。
+
+**插件配置**（在 `openclaw.json` 中设置）：
+```json
+{
+  "plugins": {
+    "entries": {
+      "memos-cloud-openclaw-plugin": {
+        "enabled": true,
+        "config": {
+          "multiAgentMode": true,
+          "allowedAgents": ["agent1", "agent2"]
+        }
+      }
+    }
+  }
+}
+```
+
+**行为规则**：
+| 配置 | 效果 |
+|------|------|
+| `MEMOS_ALLOWED_AGENTS` 未设置或为空 | 所有 Agent 均启用记忆 |
+| `MEMOS_ALLOWED_AGENTS="agent1,agent2"` | 仅 `agent1` 和 `agent2` 启用，其余跳过 |
+| `MEMOS_ALLOWED_AGENTS="agent1"` | 仅 `agent1` 启用，其他 Agent 均跳过 |
+| `MEMOS_MULTI_AGENT_MODE=false` | 白名单不生效，所有请求按单 Agent 模式处理 |
+
+> **注意**：白名单仅在 `multiAgentMode=true` 时生效。关闭多 Agent 模式时，所有 Agent 的记忆功能均正常工作，白名单配置被忽略。
 
 ## 说明
 - 未显式指定 `conversation_id` 时，默认使用 OpenClaw `sessionKey`。**TODO**：后续考虑直接绑定 OpenClaw `sessionId`。

@@ -134,6 +134,13 @@
         "type": "boolean",
         "default": false
       },
+      "allowedAgents": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "When multiAgentMode is true, only these agent IDs will activate the memory plugin. Comma-separated in env var MEMOS_ALLOWED_AGENTS. Empty list means all agents are allowed."
+      },
       "appId": {
         "type": "string"
       },
