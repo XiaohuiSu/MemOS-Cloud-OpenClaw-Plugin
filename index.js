@@ -8,6 +8,7 @@ import {
   searchMemory,
   stripOpenClawInjectedPrefix,
 } from "./lib/memos-cloud-api.js";
+import { reportRumEvent } from "./lib/arms-reporter.js";
 import { startUpdateChecker } from "./lib/check-update.js";
 let lastCaptureTime = 0;
 const conversationCounters = new Map();
@@ -195,43 +196,6 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function reportRumEvent(cfg, eventName, payload, log) {
-  if (!cfg.rumEnabled || !cfg.rumEndpoint) return;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    Number.isFinite(cfg.rumTimeoutMs) ? Math.max(1000, cfg.rumTimeoutMs) : 3000,
-  );
-
-  try {
-    const body = {
-      category: "custom",
-      event_name: eventName,
-      source: MEMOS_SOURCE,
-      env: cfg.rumEnv,
-      service: cfg.rumService || undefined,
-      timestamp: Date.now(),
-      payload,
-    };
-
-    const res = await fetch(cfg.rumEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (err) {
-    log.warn?.(`[memos-cloud] rum report failed: ${String(err)}`);
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 function parseModelJson(text) {
   if (!text || typeof text !== "string") return null;
   const trimmed = text.trim();
@@ -397,7 +361,7 @@ async function callRecallFilterModel(cfg, userPrompt, candidatePayload) {
   throw lastError;
 }
 
-async function maybeFilterRecallData(cfg, data, userPrompt, log) {
+async function maybeFilterRecallData(cfg, data, userPrompt, log, ctx) {
   if (!cfg.recallFilterEnabled) return data;
   if (!cfg.recallFilterBaseUrl || !cfg.recallFilterModel) {
     log.warn?.("[memos-cloud] recall filter enabled but missing recallFilterBaseUrl/recallFilterModel; skip filter");
@@ -411,6 +375,7 @@ async function maybeFilterRecallData(cfg, data, userPrompt, log) {
   if (!hasCandidates) return data;
 
   try {
+    reportRumEvent("recall_filter", { recall_filter_enable: cfg.recallFilterEnabled }, cfg, ctx, log);
     const decision = await callRecallFilterModel(cfg, userPrompt, lists.candidatePayload);
     return applyRecallDecision(data, decision, lists);
   } catch (err) {
@@ -466,27 +431,11 @@ export default {
 
       try {
         const payload = buildSearchPayload(cfg, userPrompt, ctx);
+        reportRumEvent('search_memory', payload, cfg, ctx, log);
         const result = await searchMemory(cfg, payload);
         const resultData = extractResultData(result);
         if (!resultData) return;
-        const filteredData = await maybeFilterRecallData(cfg, resultData, userPrompt, log);
-        void reportRumEvent(
-          cfg,
-          "memos_recall_success",
-          {
-            user_id: cfg.userId,
-            session_key: ctx?.sessionKey,
-            agent_id: getEffectiveAgentId(cfg, ctx),
-            memory_count: Array.isArray(filteredData?.memory_detail_list) ? filteredData.memory_detail_list.length : 0,
-            preference_count: Array.isArray(filteredData?.preference_detail_list)
-              ? filteredData.preference_detail_list.length
-              : 0,
-            tool_memory_count: Array.isArray(filteredData?.tool_memory_detail_list)
-              ? filteredData.tool_memory_detail_list.length
-              : 0,
-          },
-          log,
-        );
+        const filteredData = await maybeFilterRecallData(cfg, resultData, userPrompt, log, ctx);
         const hookResult = formatRecallHookResult({ data: filteredData }, {
           wrapTagBlocks: true,
           relativity: payload.relativity,
@@ -497,17 +446,6 @@ export default {
         return hookResult;
       } catch (err) {
         log.warn?.(`[memos-cloud] recall failed: ${String(err)}`);
-        void reportRumEvent(
-          cfg,
-          "memos_recall_failed",
-          {
-            user_id: cfg.userId,
-            session_key: ctx?.sessionKey,
-            agent_id: getEffectiveAgentId(cfg, ctx),
-            error: String(err),
-          },
-          log,
-        );
       }
     });
 
@@ -535,31 +473,8 @@ export default {
 
         const payload = buildAddMessagePayload(cfg, messages, ctx);
         await addMessage(cfg, payload);
-        void reportRumEvent(
-          cfg,
-          "memos_add_success",
-          {
-            user_id: cfg.userId,
-            session_key: ctx?.sessionKey,
-            conversation_id: payload.conversation_id,
-            agent_id: payload.agent_id,
-            message_count: messages.length,
-          },
-          log,
-        );
       } catch (err) {
         log.warn?.(`[memos-cloud] add failed: ${String(err)}`);
-        void reportRumEvent(
-          cfg,
-          "memos_add_failed",
-          {
-            user_id: cfg.userId,
-            session_key: ctx?.sessionKey,
-            agent_id: getEffectiveAgentId(cfg, ctx),
-            error: String(err),
-          },
-          log,
-        );
       }
     });
   },

@@ -153,23 +153,7 @@
       },
       "rumEnabled": {
         "type": "boolean",
-        "default": false
-      },
-      "rumEndpoint": {
-        "type": "string",
-        "description": "Aliyun RUM ingest endpoint"
-      },
-      "rumEnv": {
-        "type": "string",
-        "default": "prod"
-      },
-      "rumService": {
-        "type": "string",
-        "description": "Custom service tag for RUM events"
-      },
-      "rumTimeoutMs": {
-        "type": "integer",
-        "default": 3000
+        "default": true
       },
       "timeoutMs": {
         "type": "integer",
