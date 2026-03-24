@@ -6,7 +6,6 @@ import {
   extractText,
   formatRecallHookResult,
   isAgentAllowed,
-  USER_QUERY_MARKER,
   searchMemory,
   stripOpenClawInjectedPrefix,
 } from "./lib/memos-cloud-api.js";
